@@ -7,13 +7,17 @@
 # ------------------------------------------------------------------
 
 # --- Global -------------------------------------------------------
-VERSION=0.1.0
+VERSION=0.2.0
 SUBJECT=$0
 
 PATH_TO_LINKS="/usr/local/bin/"
 
 # Choose logging level (1 - errors, 2 - warnings, 3 - info, 4 - debug)
 LOGGING_LEVEL=4
+# ------------------------------------------------------------------
+
+# --- Notes --------------------------------------------------------
+# Figure out how to make second option parsing
 # ------------------------------------------------------------------
 
 # --- Utils --------------------------------------------------------
@@ -156,6 +160,7 @@ do
 			PATH_TO_LINK="${PATH_TO_LINKS}${OPTARG}"
 			validate_file "$PATH_TO_LINK"
 			PATH_TO_SCRIPT=$(readlink -f "$PATH_TO_LINK")
+			validate_file "$PATH_TO_SCRIPT"
 			;;
 
 
@@ -209,20 +214,35 @@ touch $LOCK_FILE
 case "$main_param" in
 	"m")
 		chmod +x "$PATH_TO_SCRIPT"
+		show_logs 4 "Added execute permission to the script:${PATH_TO_SCRIPT}"
+
 		ln -s "$PATH_TO_SCRIPT" "$PATH_TO_LINK"
+		show_logs 4 "Created link: ${PATH_TO_LINK}"
+		
+		show_logs 3 "Success. Use \"${LINK_NAME}\" for your script"
 		;;
 
 	"r")
 		rm -rf $PATH_TO_LINK
+		show_logs 4 "Removed link: ${PATH_TO_LINK}"
+
+		show_logs 3 "Success"
 		;;
 
 	"R")
 		rm -rf $PATH_TO_LINK
+		show_logs 4 "Removed link: ${PATH_TO_LINK}"
+		
 		rm -rf $PATH_TO_SCRIPT
+		show_logs 4 "Removed script: ${PATH_TO_LINK}"
+
+		show_logs 3 "Success"
 		;;
+
 	"h")
 		show_help_en
 		;;
+
 	"v")
 		echo "Version: ${VERSION}"
 		;;
