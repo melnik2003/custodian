@@ -2,12 +2,12 @@
 # ------------------------------------------------------------------
 # [Мельников М.А.] "Custodian" - script-managment script
 # 
-# This is a tool that will help one to add execute permissions on
-# scripts and to make links in the bin directory
+# This is a tool to help one adding execute permissions on
+# scripts and making links in the bin directory
 # ------------------------------------------------------------------
 
 # --- Global -------------------------------------------------------
-VERSION=0.0.1
+VERSION=0.1.0
 SUBJECT=$0
 
 PATH_TO_LINKS="/usr/local/bin/"
@@ -21,13 +21,21 @@ show_help_en() {
 	echo "Usage: . $0 [-param <value>]"
 	echo ""
 	echo "Main params:"
-	echo "-h				Print this help message"
-	echo "-v				Print the script version"
+	echo "-m <path> <link_name>		Make a link to the script"
+	echo "							Will prompt to create one if it doesn't exist"
+	echo ""
+	echo "-r <link_name>			Remove the link"
+	echo ""
+	echo "-R <link_name>			Remove the link and the script"
+	echo ""
+	echo "-h						Print this help message"
+	echo ""
+	echo "-v						Print the script version"
 	echo ""
 	echo "Additional params:"
-	echo "-l <level>		Choose logging level (1 - errors, 2 - warnings, 3 - info, 4 - debug)"
+	echo "-l <level>				Choose logging level (1 - errors, 2 - warnings, 3 - info, 4 - debug)"
 	echo ""
-	echo "-y				Skip all warnings"
+	echo "-y						Skip all warnings"
 }
 
 show_logs() {
@@ -78,12 +86,31 @@ show_logs() {
             ;;
     esac
 }
+
+validate_path() {
+    local path="$1"
+	
+	if [ ! -e "$path" ]; then
+		show_logs 1 "There's no such path: ${path}"
+	fi
+}
+
+validate_dir() {
+    local path="$1"
+	
+	if [ ! -d "$path" ] ; then
+		show_logs 1 "There's no such directory: ${path}"
+	fi
+}
+
+validate_file() {
+    local path="$1"
+	
+	if [ ! -f $path ] ; then
+		show_logs 1 "There's no such file: ${path}"
+	fi
+}
 # ------------------------------------------------------------------
-
-# --- Main Options -------------------------------------------------
-
-# ------------------------------------------------------------------
-
 
 # --- Params processing --------------------------------------------
 if [ $# == 0 ] ; then
@@ -91,13 +118,15 @@ if [ $# == 0 ] ; then
 	exit 1
 fi
 
-main_params=("h" "v")
+main_params=("m" "r" "R" "h" "v")
 
 main_param=""
 
+PATH_TO_SCRIPT=""
+PATH_TO_LINK=""
 YES=0
 
-while getopts ":hvl:y" param
+while getopts ":m:r:R:hvl:y" param
 do
 	if [[ " ${main_params[@]} " =~ "$param" ]]; then
 		if [ "$main_param" == "" ]; then
@@ -108,6 +137,28 @@ do
 	fi
 
 	case "$param" in
+		"m")
+			PATH_TO_SCRIPT="$OPTARG"
+			if [ ! -f "$PATH_TO_SCRIPT" ]; then
+				show_logs 2 "Script ${PATH_TO_SCRIPT} doesn't exist, going to create it now"
+				touch "$PATH_TO_SCRIPT"
+			fi
+			### Second argument
+			PATH_TO_LINK="${PATH_TO_LINKS}${OPTARG}"
+			;;
+
+		"r")
+			PATH_TO_LINK="${PATH_TO_LINKS}${OPTARG}"
+			validate_file "$PATH_TO_LINK"
+			;;
+
+		"R")
+			PATH_TO_LINK="${PATH_TO_LINKS}${OPTARG}"
+			validate_file "$PATH_TO_LINK"
+			PATH_TO_SCRIPT=$(readlink -f "$PATH_TO_LINK")
+			;;
+
+
 		"h") ;;
 		"v") ;;
 
@@ -156,6 +207,19 @@ touch $LOCK_FILE
 
 # --- Body --------------------------------------------------------
 case "$main_param" in
+	"m")
+		chmod +x "$PATH_TO_SCRIPT"
+		ln -s "$PATH_TO_SCRIPT" "$PATH_TO_LINK"
+		;;
+
+	"r")
+		rm -rf $PATH_TO_LINK
+		;;
+
+	"R")
+		rm -rf $PATH_TO_LINK
+		rm -rf $PATH_TO_SCRIPT
+		;;
 	"h")
 		show_help_en
 		;;
