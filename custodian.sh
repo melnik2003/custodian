@@ -18,6 +18,8 @@ LOGGING_LEVEL=4
 
 # --- Notes --------------------------------------------------------
 # Figure out how to make second option parsing
+# Implement sudo checks
+# Test this shit
 # ------------------------------------------------------------------
 
 # --- Utils --------------------------------------------------------
@@ -163,7 +165,6 @@ do
 			validate_file "$PATH_TO_SCRIPT"
 			;;
 
-
 		"h") ;;
 		"v") ;;
 
@@ -176,6 +177,7 @@ do
 			fi
 			show_logs 1 "Wrong argument for -l option: $OPTARG, use 1-4 instead"
 			;;
+
 		"y")
 			YES=1
 			;;
@@ -183,9 +185,11 @@ do
 		"?")
 			show_logs 1 "Unknown parameter $OPTARG"
 			;;
+
 		":")
 			show_logs 1 "Need an argument for $OPTARG"
 			;;
+
 		*)
 			show_logs 1 "Uknown error while parsing parameters"
 			;;
